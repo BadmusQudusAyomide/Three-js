@@ -32,7 +32,7 @@ document.body.appendChild(renderer.domElement)
 
 // ---------- sky + sun ----------
 const sky = new Sky()
-sky.scale.setScalar(4500)
+sky.scale.setScalar(450)
 scene.add(sky)
 
 const sunPosition = new THREE.Vector3()
