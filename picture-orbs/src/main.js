@@ -13,6 +13,10 @@ document.body.innerHTML = `
 
 const scene = new THREE.Scene()
 
+const light = new THREE.DirectionalLight(0xffffff, 1)
+light.position.set(5, 10, 7)
+scene.add(light)
+
 const camera = new THREE.PerspectiveCamera(
   50,
   window.innerWidth / window.innerHeight,
@@ -51,9 +55,7 @@ function sampleHeartPoint() {
 }
 
 const orbGeometry = new THREE.IcosahedronGeometry(1, 2)
-const orbMaterial = new THREE.MeshBasicMaterial({
-  vertexColors: true,
-})
+const orbMaterial = new THREE.MeshStandardMaterial({ roughness: 0.5 })
 
 const orbs = new THREE.InstancedMesh(orbGeometry, orbMaterial, ORB_COUNT)
 orbs.instanceColor = new THREE.InstancedBufferAttribute(
