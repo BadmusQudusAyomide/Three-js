@@ -70,6 +70,79 @@ const gridSize = 20 // 20x20 city blocks
 const cellSize = 6
 const streetEvery = 4 // every 4th row/col is a street, left empty
 
+// --- roads: asphalt strips with dashed lane markings along each street line ---
+const roadWidth = cellSize * 0.8
+const citySpan = gridSize * cellSize
+
+// dashes stacked along canvas height (V axis) -> used for roads running along Z
+function makeRoadTextureVertical(repeatCount) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 32
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#33343a'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#e3e2db'
+  ctx.fillRect(canvas.width / 2 - 2, canvas.height * 0.15, 4, canvas.height * 0.4)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(1, repeatCount)
+  return texture
+}
+
+// dashes stacked along canvas width (U axis) -> used for roads running along X
+function makeRoadTextureHorizontal(repeatCount) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 32
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#020202'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#f2f1ecec'
+  ctx.fillRect(canvas.width * 0.15, canvas.height / 2 - 2, canvas.width * 0.4, 4)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(repeatCount, 1)
+  return texture
+}
+
+const dashRepeats = Math.round(citySpan / (cellSize * 0.5))
+const roadMatZ = new THREE.MeshStandardMaterial({
+  map: makeRoadTextureVertical(dashRepeats),
+  roughness: 1,
+})
+const roadMatX = new THREE.MeshStandardMaterial({
+  map: makeRoadTextureHorizontal(dashRepeats),
+  roughness: 1,
+})
+
+for (let i = 0; i < gridSize; i++) {
+  if (i % streetEvery !== 0) continue
+  const linePos = (i - gridSize / 2) * cellSize
+
+  // road running along Z (fixed X)
+  const roadZ = new THREE.Mesh(
+    new THREE.PlaneGeometry(roadWidth, citySpan),
+    roadMatZ
+  )
+  roadZ.rotation.x = -Math.PI / 2
+  roadZ.position.set(linePos, 0.02, 0)
+  scene.add(roadZ)
+
+  // road running along X (fixed Z)
+  const roadX = new THREE.Mesh(
+    new THREE.PlaneGeometry(citySpan, roadWidth),
+    roadMatX
+  )
+  roadX.rotation.x = -Math.PI / 2
+  roadX.position.set(0, 0.02, linePos)
+  scene.add(roadX)
+}
+
 // generate a glass-window grid texture on the fly (subtle grid lines, no glow)
 function makeWindowTexture() {
   const canvas = document.createElement('canvas')
