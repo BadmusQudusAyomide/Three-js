@@ -2,11 +2,13 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Sky } from 'three/examples/jsm/objects/Sky.js'
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 
 document.body.innerHTML = `
   <div id="loading">Arriving…</div>
   <div id="hero-text">
-    <h1>Your Name</h1>
+    <h1>Badmus Ayomide</h1>
     <p>Welcome home — look around</p>
   </div>
 `
@@ -378,6 +380,46 @@ makeBush(-2.0, 1.4, 1)
 makeBush(2.0, 1.4, 1)
 makeBush(-3.4, 2.6, 0.8)
 makeBush(3.4, 2.6, 0.8)
+
+// ---------- name sign ----------
+const nameMaterial = new THREE.MeshStandardMaterial({
+  color: 0xf3d9a4,
+  roughness: 0.35,
+  metalness: 0.15,
+})
+
+const nameLight = new THREE.SpotLight(0xfff1d6, 8, 10, Math.PI / 5, 0.5, 1.5)
+nameLight.position.set(4.2, 2.6, 4.4)
+scene.add(nameLight)
+scene.add(nameLight.target)
+
+new FontLoader().load('/fonts/helvetiker_bold.typeface.json', (font) => {
+  const textGeometry = new TextGeometry('Badmus Ayomide', {
+    font,
+    size: 0.42,
+    depth: 0.16,
+    curveSegments: 6,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.015,
+    bevelSegments: 2,
+  })
+  // center on X/Z but keep the base sitting at y=0, so it stands on the lawn
+  textGeometry.computeBoundingBox()
+  const bbox = textGeometry.boundingBox
+  textGeometry.translate(
+    -(bbox.min.x + bbox.max.x) / 2,
+    -bbox.min.y,
+    -(bbox.min.z + bbox.max.z) / 2,
+  )
+
+  const nameMesh = addShadowMesh(new THREE.Mesh(textGeometry, nameMaterial))
+  nameMesh.position.set(4.3, 0.02, 2.6)
+  nameMesh.rotation.y = -0.55
+  scene.add(nameMesh)
+
+  nameLight.target.position.copy(nameMesh.position)
+})
 
 // ---------- fireflies ----------
 const FIREFLY_COUNT = 50
