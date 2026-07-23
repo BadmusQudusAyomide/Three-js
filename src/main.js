@@ -146,43 +146,97 @@ for (let i = 0; i < gridSize; i++) {
 // generate a facade texture for an individual building
 function makeFacadeTexture(width, height) {
   const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 256
+  canvas.width = 256
+  canvas.height = 512
   const ctx = canvas.getContext('2d')
-  ctx.fillStyle = '#c4cad1'
+
+  const baseHue = 210
+  const baseLight = 0.52 + Math.random() * 0.14
+  const topLight = Math.min(0.92, baseLight + 0.08)
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+  gradient.addColorStop(0, `hsl(${baseHue}, 18%, ${Math.round(topLight * 100)}%)`)
+  gradient.addColorStop(1, `hsl(${baseHue}, 12%, ${Math.round(baseLight * 100)}%)`)
+  ctx.fillStyle = gradient
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const cols = 4 + Math.floor(Math.random() * 3)
-  const rows = 8 + Math.floor(Math.random() * 5)
+  // subtle vertical paneling and weathering
+  for (let i = 0; i < 5; i++) {
+    const x = i * canvas.width * 0.18 + (Math.random() - 0.5) * 10
+    ctx.fillStyle = `rgba(255,255,255,${0.03 + Math.random() * 0.05})`
+    ctx.fillRect(x, 0, 8, canvas.height)
+  }
+
+  const cols = 3 + Math.floor(Math.random() * 3)
+  const rows = 10 + Math.floor(Math.random() * 6)
   const cellW = canvas.width / cols
   const cellH = canvas.height / rows
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const shade = 0.7 + Math.random() * 0.3
-      ctx.fillStyle = `rgba(${120 * shade}, ${130 * shade}, ${160 * shade}, 1)`
-      ctx.fillRect(
-        c * cellW + cellW * 0.08,
-        r * cellH + cellH * 0.08,
-        cellW * 0.84,
-        cellH * 0.84
-      )
-      if (Math.random() < 0.18) {
-        ctx.fillStyle = 'rgba(255, 235, 180, 0.7)'
-        ctx.fillRect(
-          c * cellW + cellW * 0.22,
-          r * cellH + cellH * 0.22,
-          cellW * 0.56,
-          cellH * 0.56
-        )
+      const x = c * cellW + cellW * 0.08
+      const y = r * cellH + cellH * 0.08
+      const w = cellW * 0.84
+      const h = cellH * 0.84
+
+      const panelShade = 0.88 - Math.random() * 0.12
+      ctx.fillStyle = `hsl(${baseHue}, 18%, ${Math.round(panelShade * 100)}%)`
+      ctx.fillRect(x, y, w, h)
+
+      const windowGlow = Math.random() < 0.5
+      if (windowGlow) {
+        ctx.fillStyle = `rgba(255, 235, 180, ${0.35 + Math.random() * 0.25})`
+      } else {
+        ctx.fillStyle = `rgba(45, 60, 90, ${0.35 + Math.random() * 0.25})`
+      }
+      ctx.fillRect(x + w * 0.12, y + h * 0.12, w * 0.76, h * 0.76)
+
+      if (Math.random() < 0.3) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(x + w * 0.12, y + h * 0.12, w * 0.76, h * 0.76)
+      }
+
+      // add a small balcony or detail in some panels
+      if (Math.random() < 0.17) {
+        const balconyY = y + h * 0.7
+        ctx.fillStyle = 'rgba(40, 40, 45, 0.85)'
+        ctx.fillRect(x + w * 0.1, balconyY, w * 0.8, h * 0.08)
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(x + w * 0.1, balconyY, w * 0.8, h * 0.08)
       }
     }
   }
 
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)'
+  ctx.lineWidth = 2
+  for (let c = 1; c < cols; c++) {
+    const x = c * cellW
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x, canvas.height)
+    ctx.stroke()
+  }
+  for (let r = 1; r < rows; r++) {
+    const y = r * cellH
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(canvas.width, y)
+    ctx.stroke()
+  }
+
+  // noise overlay for extra realism
+  for (let i = 0; i < 1800; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`
+    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1)
+  }
+
   const texture = new THREE.CanvasTexture(canvas)
+  texture.encoding = THREE.sRGBEncoding
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(Math.max(1, width * 0.5), Math.max(1, height * 0.25))
+  texture.repeat.set(Math.max(1, width * 0.55), Math.max(1, height * 0.18))
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
   return texture
 }
 
