@@ -1,9 +1,6 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 const ORB_COUNT = 1400
 
@@ -15,7 +12,6 @@ document.body.innerHTML = `
 `
 
 const scene = new THREE.Scene()
-scene.fog = new THREE.FogExp2(0x030008, 0.035)
 
 const camera = new THREE.PerspectiveCamera(
   50,
@@ -57,7 +53,6 @@ function sampleHeartPoint() {
 const orbGeometry = new THREE.IcosahedronGeometry(1, 2)
 const orbMaterial = new THREE.MeshBasicMaterial({
   vertexColors: true,
-  toneMapped: false,
 })
 
 const orbs = new THREE.InstancedMesh(orbGeometry, orbMaterial, ORB_COUNT)
@@ -68,11 +63,12 @@ orbs.instanceColor = new THREE.InstancedBufferAttribute(
 scene.add(orbs)
 
 const dummy = new THREE.Object3D()
+// red-forward palette with a couple of cool accent tones, like planets against a red sun
 const palette = [
-  new THREE.Color(0xff1a5e),
-  new THREE.Color(0xff4d8d),
-  new THREE.Color(0xc4004e),
-  new THREE.Color(0xff3378),
+  new THREE.Color(0xff2200),
+  new THREE.Color(0xff5533),
+  new THREE.Color(0xffaa33),
+  new THREE.Color(0x4fc3f7),
 ]
 
 function easeOutCubic(x) {
@@ -110,7 +106,7 @@ for (let i = 0; i < ORB_COUNT; i++) {
     z: Math.random() * Math.PI * 2,
   }
 
-  const size = 0.06 + Math.random() * 0.08
+  const size = 0.16 + Math.random() * 0.14
   const color = palette[Math.floor(Math.random() * palette.length)]
 
   orbData.push({
@@ -132,21 +128,10 @@ for (let i = 0; i < ORB_COUNT; i++) {
 }
 orbs.instanceColor.needsUpdate = true
 
-const composer = new EffectComposer(renderer)
-composer.addPass(new RenderPass(scene, camera))
-const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1.1,
-  0.7,
-  0.15,
-)
-composer.addPass(bloomPass)
-
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-  composer.setSize(window.innerWidth, window.innerHeight)
 })
 
 function idlePosition(d, t) {
@@ -213,7 +198,7 @@ function animate() {
   orbs.instanceMatrix.needsUpdate = true
 
   controls.update()
-  composer.render()
+  renderer.render(scene, camera)
 }
 
 animate()
