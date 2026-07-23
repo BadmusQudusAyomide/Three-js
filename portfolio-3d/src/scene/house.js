@@ -1,24 +1,67 @@
 import * as THREE from 'three'
 import { addShadowMesh } from '../utils/shadow.js'
+import { createDoor, DOOR_WIDTH, DOOR_HEIGHT } from './door.js'
+import { createInterior, INTERIOR_ROOM } from './interior.js'
 
 const WALL_W = 8
 const WALL_H = 3.6
 const WALL_D = 6
+const WALL_T = 0.15
 
 // approximate footprint used for walk-mode collision
 export const HOUSE_FOOTPRINT = { minX: -4, maxX: 4, minZ: -6.3, maxZ: 0.7 }
 
+// the doorway itself is always walkable, bridging outside to the interior room
+const DOOR_GAP = {
+  minX: -DOOR_WIDTH / 2,
+  maxX: DOOR_WIDTH / 2,
+  minZ: -0.2,
+  maxZ: 0.6,
+}
+
+function insideRect(x, z, rect) {
+  return x > rect.minX && x < rect.maxX && z > rect.minZ && z < rect.maxZ
+}
+
+export function isHouseBlocking(x, z) {
+  if (!insideRect(x, z, HOUSE_FOOTPRINT)) return false
+  if (insideRect(x, z, DOOR_GAP)) return false
+  if (insideRect(x, z, INTERIOR_ROOM)) return false
+  return true
+}
+
 export function createHouse(scene, materials) {
   const house = new THREE.Group()
 
-  const walls = addShadowMesh(
+  // front wall built as three panels around the door opening, instead of a
+  // solid box, so the house has an actual hollow interior behind the door
+  const sideWallWidth = WALL_W / 2 - DOOR_WIDTH / 2
+  for (const side of [-1, 1]) {
+    const sideWall = addShadowMesh(
+      new THREE.Mesh(
+        new THREE.BoxGeometry(sideWallWidth, WALL_H, WALL_T),
+        materials.wall,
+      ),
+    )
+    sideWall.position.set(
+      side * (DOOR_WIDTH / 2 + sideWallWidth / 2),
+      WALL_H / 2,
+      -WALL_T / 2,
+    )
+    house.add(sideWall)
+  }
+
+  const headerHeight = WALL_H - DOOR_HEIGHT
+  const header = addShadowMesh(
     new THREE.Mesh(
-      new THREE.BoxGeometry(WALL_W, WALL_H, WALL_D),
+      new THREE.BoxGeometry(DOOR_WIDTH, headerHeight, WALL_T),
       materials.wall,
     ),
   )
-  walls.position.set(0, WALL_H / 2, -3)
-  house.add(walls)
+  header.position.set(0, DOOR_HEIGHT + headerHeight / 2, -WALL_T / 2)
+  house.add(header)
+
+  createInterior(house)
 
   // gable roof via extruded triangular profile
   const roofOverhangX = 0.5
@@ -48,18 +91,14 @@ export function createHouse(scene, materials) {
   chimney.position.set(2.4, WALL_H + 1.3, -4.2)
   house.add(chimney)
 
-  // door
-  const door = addShadowMesh(
-    new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.2, 0.12), materials.door),
-  )
-  door.position.set(0, 1.1, 0.06)
-  house.add(door)
-
   const doorFrame = addShadowMesh(
     new THREE.Mesh(new THREE.BoxGeometry(1.34, 2.44, 0.08), materials.trim),
   )
   doorFrame.position.set(0, 1.22, 0.0)
   house.add(doorFrame)
+
+  const door = createDoor(materials)
+  house.add(door.group)
 
   // ground-floor windows
   function makeWindow(x) {
@@ -157,5 +196,5 @@ export function createHouse(scene, materials) {
   }
 
   scene.add(house)
-  return house
+  return { house, door }
 }

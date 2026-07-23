@@ -9,7 +9,7 @@ export function createWalkControls({
   camera,
   renderer,
   arrivalControls,
-  houseFootprint,
+  isBlocking,
   yardBounds,
   ui,
 }) {
@@ -19,22 +19,13 @@ export function createWalkControls({
   const keys = { forward: false, back: false, left: false, right: false }
   const velocity = new THREE.Vector3()
 
-  function isInsideHouse(x, z) {
-    return (
-      x > houseFootprint.minX &&
-      x < houseFootprint.maxX &&
-      z > houseFootprint.minZ &&
-      z < houseFootprint.maxZ
-    )
-  }
-
   function resolveCollision(oldX, oldZ, newX, newZ) {
     let x = THREE.MathUtils.clamp(newX, yardBounds.minX, yardBounds.maxX)
     let z = THREE.MathUtils.clamp(newZ, yardBounds.minZ, yardBounds.maxZ)
 
-    if (isInsideHouse(x, z)) {
-      if (!isInsideHouse(x, oldZ)) z = oldZ
-      else if (!isInsideHouse(oldX, z)) x = oldX
+    if (isBlocking(x, z)) {
+      if (!isBlocking(x, oldZ)) z = oldZ
+      else if (!isBlocking(oldX, z)) x = oldX
       else {
         x = oldX
         z = oldZ
