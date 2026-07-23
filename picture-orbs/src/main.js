@@ -7,8 +7,15 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 
 const ORB_COUNT = 1400
 
+document.body.innerHTML = `
+  <aside id="sidebar">
+    <h1>Shapes</h1>
+    <button id="shape-love" class="shape-btn" data-active="false">Love</button>
+  </aside>
+`
+
 const scene = new THREE.Scene()
-scene.fog = new THREE.FogExp2(0x030008, 0.045)
+scene.fog = new THREE.FogExp2(0x030008, 0.035)
 
 const camera = new THREE.PerspectiveCamera(
   50,
@@ -27,14 +34,9 @@ const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.dampingFactor = 0.06
 controls.autoRotate = true
-controls.autoRotateSpeed = 0.8
+controls.autoRotateSpeed = 0.5
 controls.minDistance = 6
 controls.maxDistance = 30
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.4))
-const pointLight = new THREE.PointLight(0xff5588, 6, 40)
-pointLight.position.set(0, 2, 10)
-scene.add(pointLight)
 
 // implicit heart curve: f(x,y) <= 0 marks the inside of the shape
 function insideHeart(x, y) {
@@ -53,12 +55,9 @@ function sampleHeartPoint() {
 }
 
 const orbGeometry = new THREE.IcosahedronGeometry(1, 2)
-const orbMaterial = new THREE.MeshStandardMaterial({
-  emissive: 0xffffff,
-  emissiveIntensity: 1.4,
-  color: 0x220011,
-  roughness: 0.35,
-  metalness: 0.1,
+const orbMaterial = new THREE.MeshBasicMaterial({
+  vertexColors: true,
+  toneMapped: false,
 })
 
 const orbs = new THREE.InstancedMesh(orbGeometry, orbMaterial, ORB_COUNT)
@@ -70,61 +69,67 @@ scene.add(orbs)
 
 const dummy = new THREE.Object3D()
 const palette = [
-  new THREE.Color(0xff2d6f),
-  new THREE.Color(0xff6fa5),
-  new THREE.Color(0xffd1dc),
-  new THREE.Color(0xff0044),
+  new THREE.Color(0xff1a5e),
+  new THREE.Color(0xff4d8d),
+  new THREE.Color(0xc4004e),
+  new THREE.Color(0xff3378),
 ]
-
-const orbData = []
 
 function easeOutCubic(x) {
   return 1 - Math.pow(1 - x, 3)
 }
 
-const SCALE = 4.4
+const orbData = []
+const HEART_SCALE = 4.4
+const FLOAT_SPREAD = 9
+
 for (let i = 0; i < ORB_COUNT; i++) {
   const { x, y } = sampleHeartPoint()
-  const depth = (Math.random() - 0.5) * 1.4
-  const baseX = x * SCALE
-  const baseY = y * SCALE
-  const baseZ = depth
+  const heartX = x * HEART_SCALE
+  const heartY = y * HEART_SCALE
+  const heartZ = (Math.random() - 0.5) * 1.4
 
-  // scattered starting point on a large sphere shell, so orbs fly inward to assemble
-  const dir = new THREE.Vector3(
-    Math.random() * 2 - 1,
-    Math.random() * 2 - 1,
-    Math.random() * 2 - 1,
-  ).normalize()
-  const spread = 14 + Math.random() * 10
-  const startX = dir.x * spread
-  const startY = dir.y * spread
-  const startZ = dir.z * spread
+  const idleCenter = {
+    x: (Math.random() * 2 - 1) * FLOAT_SPREAD,
+    y: (Math.random() * 2 - 1) * FLOAT_SPREAD * 0.6,
+    z: (Math.random() * 2 - 1) * FLOAT_SPREAD * 0.6,
+  }
+  const idleAmp = {
+    x: 0.6 + Math.random() * 1.2,
+    y: 0.6 + Math.random() * 1.2,
+    z: 0.6 + Math.random() * 1.2,
+  }
+  const idleFreq = {
+    x: 0.08 + Math.random() * 0.1,
+    y: 0.08 + Math.random() * 0.1,
+    z: 0.08 + Math.random() * 0.1,
+  }
+  const idlePhase = {
+    x: Math.random() * Math.PI * 2,
+    y: Math.random() * Math.PI * 2,
+    z: Math.random() * Math.PI * 2,
+  }
 
-  const size = 0.05 + Math.random() * 0.09
+  const size = 0.06 + Math.random() * 0.08
   const color = palette[Math.floor(Math.random() * palette.length)]
 
   orbData.push({
-    startX,
-    startY,
-    startZ,
-    baseX,
-    baseY,
-    baseZ,
+    heartX,
+    heartY,
+    heartZ,
+    idleCenter,
+    idleAmp,
+    idleFreq,
+    idlePhase,
     size,
-    phase: Math.random() * Math.PI * 2,
-    speed: 0.6 + Math.random() * 0.8,
-    delay: Math.random() * 0.6,
-    duration: 1.8 + Math.random() * 1.2,
+    wobblePhase: Math.random() * Math.PI * 2,
+    wobbleSpeed: 0.5 + Math.random() * 0.6,
+    delay: Math.random() * 2.2,
+    duration: 3 + Math.random() * 2.5,
   })
 
-  dummy.position.set(startX, startY, startZ)
-  dummy.scale.setScalar(size * 0.4)
-  dummy.updateMatrix()
-  orbs.setMatrixAt(i, dummy.matrix)
   orbs.setColorAt(i, color)
 }
-orbs.instanceMatrix.needsUpdate = true
 orbs.instanceColor.needsUpdate = true
 
 const composer = new EffectComposer(renderer)
@@ -144,28 +149,64 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight)
 })
 
+function idlePosition(d, t) {
+  return {
+    x: d.idleCenter.x + Math.sin(t * d.idleFreq.x + d.idlePhase.x) * d.idleAmp.x,
+    y: d.idleCenter.y + Math.sin(t * d.idleFreq.y + d.idlePhase.y * 1.3) * d.idleAmp.y,
+    z: d.idleCenter.z + Math.sin(t * d.idleFreq.z + d.idlePhase.z * 1.7) * d.idleAmp.z,
+  }
+}
+
+function heartPosition(d, t) {
+  const wobble = Math.sin(t * d.wobbleSpeed + d.wobblePhase) * 0.04
+  return { x: d.heartX, y: d.heartY, z: d.heartZ + wobble }
+}
+
+const modeFns = { floating: idlePosition, love: heartPosition }
+
+let mode = 'floating'
+let prevMode = 'floating'
+let toggleTime = -1000
+
+const loveButton = document.getElementById('shape-love')
+loveButton.addEventListener('click', () => {
+  prevMode = mode
+  mode = mode === 'love' ? 'floating' : 'love'
+  toggleTime = clock.getElapsedTime()
+  loveButton.dataset.active = String(mode === 'love')
+  loveButton.textContent = mode === 'love' ? 'Release' : 'Love'
+})
+
 const clock = new THREE.Clock()
 
 function animate() {
   requestAnimationFrame(animate)
   const t = clock.getElapsedTime()
 
-  const pulse = 1 + 0.06 * Math.sin(t * 1.6)
+  const targetFn = modeFns[mode]
+  const prevFn = modeFns[prevMode]
+
   for (let i = 0; i < ORB_COUNT; i++) {
     const d = orbData[i]
+    const startTime = toggleTime + d.delay
 
-    const rawProgress = (t - d.delay) / d.duration
-    const progress = Math.min(Math.max(rawProgress, 0), 1)
-    const eased = easeOutCubic(progress)
+    let pos
+    if (t < startTime) {
+      pos = prevFn(d, t)
+    } else {
+      const progress = Math.min((t - startTime) / d.duration, 1)
+      const eased = easeOutCubic(progress)
+      const from = prevFn(d, startTime)
+      const to = targetFn(d, t)
+      pos = {
+        x: from.x + (to.x - from.x) * eased,
+        y: from.y + (to.y - from.y) * eased,
+        z: from.z + (to.z - from.z) * eased,
+      }
+    }
 
-    const wobble = progress >= 1 ? Math.sin(t * d.speed + d.phase) * 0.05 : 0
-
-    const x = d.startX + (d.baseX - d.startX) * eased
-    const y = d.startY + (d.baseY - d.startY) * eased
-    const z = d.startZ + (d.baseZ - d.startZ) * eased + wobble
-
-    dummy.position.set(x, y, z)
-    dummy.scale.setScalar(d.size * (0.4 + 0.6 * eased) * pulse)
+    dummy.position.set(pos.x, pos.y, pos.z)
+    dummy.scale.setScalar(d.size)
     dummy.updateMatrix()
     orbs.setMatrixAt(i, dummy.matrix)
   }
