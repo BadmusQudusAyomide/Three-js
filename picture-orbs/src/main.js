@@ -81,6 +81,8 @@ const orbData = []
 const HEART_SCALE = 4.4
 const FLOAT_SPREAD = 9
 
+const pinkColor = new THREE.Color(0xff69b4)
+
 for (let i = 0; i < ORB_COUNT; i++) {
   const { x, y } = sampleHeartPoint()
   const heartX = x * HEART_SCALE
@@ -124,6 +126,7 @@ for (let i = 0; i < ORB_COUNT; i++) {
     wobbleSpeed: 0.5 + Math.random() * 0.6,
     delay: Math.random() * 2.2,
     duration: 3 + Math.random() * 2.5,
+    originalColor: color,
   })
 
   orbs.setColorAt(i, color)
@@ -151,6 +154,14 @@ function heartPosition(d, t) {
 
 const modeFns = { floating: idlePosition, love: heartPosition }
 
+function updateOrbColors(isLoveMode) {
+  for (let i = 0; i < ORB_COUNT; i++) {
+    const color = isLoveMode ? pinkColor : orbData[i].originalColor
+    orbs.setColorAt(i, color)
+  }
+  orbs.instanceColor.needsUpdate = true
+}
+
 let mode = 'floating'
 let prevMode = 'floating'
 let toggleTime = -1000
@@ -160,6 +171,7 @@ loveButton.addEventListener('click', () => {
   prevMode = mode
   mode = mode === 'love' ? 'floating' : 'love'
   toggleTime = clock.getElapsedTime()
+  updateOrbColors(mode === 'love')
   loveButton.dataset.active = String(mode === 'love')
   loveButton.textContent = mode === 'love' ? 'Release' : 'Love'
 })
