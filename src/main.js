@@ -452,38 +452,55 @@ for (let i = 0; i < gridSize; i++) {
 
 const pedestrians = []
 
-function createPedestrian(color) {
-  const group = new THREE.Group()
-  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0.05 })
-  const headMat = new THREE.MeshStandardMaterial({ color: 0xffd8b7, roughness: 0.9, metalness: 0.02 })
+const pedestrianClothingColors = ['#4c8cff', '#ff7f50', '#8cd17c', '#f2d35a', '#9f65ff', '#f278b0', '#5d8b6f']
 
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.4, 0.12), bodyMat)
-  body.position.y = 0.22
+function createPedestrian() {
+  const group = new THREE.Group()
+
+  const bodyColor = pedestrianClothingColors[Math.floor(Math.random() * pedestrianClothingColors.length)]
+  const pantsColor = Math.random() < 0.5 ? '#3a3a3a' : '#2f4f4f'
+  const skinColor = ['#ffcf9b', '#f4b08d', '#d19c6c', '#8b5d4f'][Math.floor(Math.random() * 4)]
+
+  const shirtMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.85, metalness: 0.03 })
+  const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.9, metalness: 0.04 })
+  const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.95, metalness: 0.02 })
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.42, 0.14), shirtMat)
+  body.position.y = 0.28
   group.add(body)
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), headMat)
-  head.position.y = 0.52
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), skinMat)
+  head.position.y = 0.62
   group.add(head)
 
-  const legGeometry = new THREE.BoxGeometry(0.08, 0.3, 0.08)
-  const leftLeg = new THREE.Mesh(legGeometry, bodyMat)
-  const rightLeg = new THREE.Mesh(legGeometry, bodyMat)
-  leftLeg.position.set(-0.05, 0.05, 0)
-  rightLeg.position.set(0.05, 0.05, 0)
+  const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.34, 0.08), shirtMat)
+  const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.34, 0.08), shirtMat)
+  leftArm.position.set(-0.18, 0.28, 0)
+  rightArm.position.set(0.18, 0.28, 0)
+  leftArm.rotation.z = 0.15
+  rightArm.rotation.z = -0.15
+  group.add(leftArm, rightArm)
+
+  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 0.08), pantsMat)
+  const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 0.08), pantsMat)
+  leftLeg.position.set(-0.06, 0.05, 0)
+  rightLeg.position.set(0.06, 0.05, 0)
   group.add(leftLeg, rightLeg)
 
-  group.userData.legs = { left: leftLeg, right: rightLeg }
+  group.userData = {
+    legs: { left: leftLeg, right: rightLeg },
+    arms: { left: leftArm, right: rightArm },
+  }
   return group
 }
 
-function addPedestrianPath(path, speed) {
-  const color = new THREE.Color(`hsl(${Math.random() * 360}, 55%, 55%)`)
-  const person = createPedestrian(color)
+function addPedestrianPath(path, speed, startProgress = 0) {
+  const person = createPedestrian()
   person.position.copy(path[0])
   person.userData.path = path
   person.userData.speed = speed
-  person.userData.progress = 0
-  person.userData.direction = 1
+  person.userData.progress = startProgress
+  person.userData.direction = Math.random() < 0.5 ? 1 : -1
   pedestrians.push(person)
   scene.add(person)
 }
@@ -496,27 +513,47 @@ const sidewalkY = 0.1
 const halfCity = citySpan / 2
 const pathOffset = roadWidth / 2 + sidewalkWidth / 2
 
-for (let i = 1; i < gridSize; i += streetEvery) {
+for (let i = 0; i < gridSize; i += streetEvery) {
   const linePos = (i - gridSize / 2) * cellSize
   const leftSide = linePos - pathOffset
   const rightSide = linePos + pathOffset
 
-  addPedestrianPath(
-    createPath({ x: leftSide, z: -halfCity + 2 }, { x: leftSide, z: halfCity - 2 }, sidewalkY),
-    1.2 + Math.random() * 0.7
-  )
-  addPedestrianPath(
-    createPath({ x: rightSide, z: halfCity - 2 }, { x: rightSide, z: -halfCity + 2 }, sidewalkY),
-    1.1 + Math.random() * 0.6
-  )
-  addPedestrianPath(
-    createPath({ x: -halfCity + 2, z: leftSide }, { x: halfCity - 2, z: leftSide }, sidewalkY),
-    1.0 + Math.random() * 0.6
-  )
-  addPedestrianPath(
-    createPath({ x: halfCity - 2, z: rightSide }, { x: -halfCity + 2, z: rightSide }, sidewalkY),
-    1.0 + Math.random() * 0.7
-  )
+  const verticalPositions = [leftSide, rightSide]
+  const horizontalPositions = [leftSide, rightSide]
+
+  for (const x of verticalPositions) {
+    if (Math.random() < 0.92) {
+      addPedestrianPath(
+        createPath({ x: x + (Math.random() - 0.5) * 0.18, z: -halfCity + 2 }, { x: x + (Math.random() - 0.5) * 0.18, z: halfCity - 2 }, sidewalkY),
+        1.05 + Math.random() * 0.6,
+        Math.random()
+      )
+    }
+    if (Math.random() < 0.7) {
+      addPedestrianPath(
+        createPath({ x: x + (Math.random() - 0.5) * 0.18, z: halfCity - 4 }, { x: x + (Math.random() - 0.5) * 0.18, z: -halfCity + 4 }, sidewalkY),
+        0.85 + Math.random() * 0.5,
+        Math.random()
+      )
+    }
+  }
+
+  for (const z of horizontalPositions) {
+    if (Math.random() < 0.92) {
+      addPedestrianPath(
+        createPath({ x: -halfCity + 2, z: z + (Math.random() - 0.5) * 0.18 }, { x: halfCity - 2, z: z + (Math.random() - 0.5) * 0.18 }, sidewalkY),
+        1.0 + Math.random() * 0.55,
+        Math.random()
+      )
+    }
+    if (Math.random() < 0.72) {
+      addPedestrianPath(
+        createPath({ x: halfCity - 4, z: z + (Math.random() - 0.5) * 0.18 }, { x: -halfCity + 4, z: z + (Math.random() - 0.5) * 0.18 }, sidewalkY),
+        0.75 + Math.random() * 0.55,
+        Math.random()
+      )
+    }
+  }
 }
 
 // --- first-person controls (click canvas to lock pointer) ---
@@ -597,11 +634,11 @@ function animate() {
     }
   }
 
-  const walkCycle = Math.sin(clock.elapsedTime * 10) * 0.4
+  const walkCycle = Math.sin(clock.elapsedTime * 10)
   for (const pedestrian of pedestrians) {
     const path = pedestrian.userData.path
     const speedFactor = pedestrian.userData.speed
-    pedestrian.userData.progress += speedFactor * delta * 0.16 * pedestrian.userData.direction
+    pedestrian.userData.progress += speedFactor * delta * 0.12 * pedestrian.userData.direction
 
     if (pedestrian.userData.progress >= 1 || pedestrian.userData.progress <= 0) {
       pedestrian.userData.direction *= -1
@@ -616,8 +653,11 @@ function animate() {
     pedestrian.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward)
 
     const legs = pedestrian.userData.legs
-    legs.left.rotation.x = walkCycle
-    legs.right.rotation.x = -walkCycle
+    const arms = pedestrian.userData.arms
+    legs.left.rotation.x = walkCycle * 0.35
+    legs.right.rotation.x = -walkCycle * 0.35
+    arms.left.rotation.x = -walkCycle * 0.24
+    arms.right.rotation.x = walkCycle * 0.24
   }
 
   composer.render()
