@@ -171,6 +171,21 @@ function makeFacadeTexture(width, height) {
   const cellW = canvas.width / cols
   const cellH = canvas.height / rows
 
+  const baseHeight = cellH * 1.1
+  const baseY = canvas.height - baseHeight
+  ctx.fillStyle = `rgba(30, 34, 38, 0.55)`
+  ctx.fillRect(0, baseY, canvas.width, baseHeight)
+
+  for (let i = 0; i < cols; i++) {
+    if (Math.random() < 0.7) {
+      const signWidth = cellW * 0.6
+      const signHeight = baseHeight * 0.28
+      const signX = i * cellW + (cellW - signWidth) * 0.5
+      ctx.fillStyle = `rgba(210, 220, 240, ${0.4 + Math.random() * 0.25})`
+      ctx.fillRect(signX, baseY + baseHeight * 0.15, signWidth, signHeight)
+    }
+  }
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const x = c * cellW + cellW * 0.08
@@ -232,7 +247,7 @@ function makeFacadeTexture(width, height) {
   }
 
   const texture = new THREE.CanvasTexture(canvas)
-  texture.encoding = THREE.sRGBEncoding
+  texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(Math.max(1, width * 0.55), Math.max(1, height * 0.18))
@@ -240,19 +255,88 @@ function makeFacadeTexture(width, height) {
   return texture
 }
 
-function makeBuildingMaterial(width, height) {
-  const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color().setHSL(0.57 + Math.random() * 0.08, 0.08, 0.72),
-    map: makeFacadeTexture(width, height),
-    roughness: 0.45,
-    metalness: 0.12,
-    emissive: 0x111111,
-    emissiveIntensity: 0.12,
-  })
-  return material
+function makeRoofTexture(width, depth) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+
+  ctx.fillStyle = '#51565c'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'
+  for (let i = 0; i < 8; i++) {
+    const x = Math.random() * canvas.width
+    const y = Math.random() * canvas.height
+    const w = 10 + Math.random() * 18
+    const h = 4 + Math.random() * 8
+    ctx.fillRect(x, y, w, h)
+  }
+
+  ctx.fillStyle = 'rgba(0,0,0,0.15)'
+  for (let i = 0; i < 60; i++) {
+    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1)
+  }
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(Math.max(1, width * 0.15), Math.max(1, depth * 0.15))
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+  return texture
 }
 
-const buildingGeo = new THREE.BoxGeometry(1, 1, 1)
+function createBuildingMesh(width, height, depth) {
+  const facadeMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color().setHSL(0.58 + Math.random() * 0.08, 0.12, 0.7),
+    map: makeFacadeTexture(width, height),
+    roughness: 0.5,
+    metalness: 0.08,
+    emissive: 0x101010,
+    emissiveIntensity: 0.08,
+  })
+
+  const roofMaterial = new THREE.MeshStandardMaterial({
+    map: makeRoofTexture(width, depth),
+    color: 0x52585f,
+    roughness: 0.9,
+    metalness: 0.05,
+  })
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), facadeMaterial)
+  body.castShadow = true
+  body.receiveShadow = true
+
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.92, depth * 0.92), roofMaterial)
+  roof.rotation.x = -Math.PI / 2
+  roof.position.y = height / 2 + 0.02
+
+  const group = new THREE.Group()
+  group.add(body)
+  group.add(roof)
+
+  const detailCount = 1 + Math.floor(Math.random() * 3)
+  for (let i = 0; i < detailCount; i++) {
+    const detailWidth = 0.25 + Math.random() * 0.45
+    const detailDepth = 0.25 + Math.random() * 0.45
+    const detailHeight = 0.15 + Math.random() * 0.35
+
+    const detail = new THREE.Mesh(
+      new THREE.BoxGeometry(detailWidth, detailHeight, detailDepth),
+      roofMaterial
+    )
+    detail.position.set(
+      (Math.random() - 0.5) * (width * 0.7),
+      height / 2 + detailHeight / 2 + 0.02,
+      (Math.random() - 0.5) * (depth * 0.7)
+    )
+    group.add(detail)
+  }
+
+  return group
+}
+
 const buildings = new THREE.Group()
 
 for (let gx = 0; gx < gridSize; gx++) {
@@ -267,12 +351,9 @@ for (let gx = 0; gx < gridSize; gx++) {
     const depth = 2 + Math.random() * 2
     const height = 4 + Math.pow(Math.random(), 2) * 36
 
-    const mesh = new THREE.Mesh(buildingGeo, makeBuildingMaterial(width, height))
-    mesh.position.set(worldX, height / 2, worldZ)
-    mesh.scale.set(width, height, depth)
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    buildings.add(mesh)
+    const building = createBuildingMesh(width, height, depth)
+    building.position.set(worldX, height / 2, worldZ)
+    buildings.add(building)
   }
 }
 scene.add(buildings)
