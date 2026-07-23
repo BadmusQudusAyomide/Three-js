@@ -17,25 +17,40 @@ canvas {
 
 #hero-text {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
+  top: 32px;
+  left: 40px;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  color: #f4f4f6;
+  color: #fff5e8;
   pointer-events: none;
   z-index: 10;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 #hero-text h1 {
-  font-size: 48px;
+  font-size: 30px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
 }
 
 #hero-text p {
-  font-size: 16px;
-  color: #9ca0ab;
-  letter-spacing: 0.02em;
+  font-size: 14px;
+  color: #e3d9c8;
+  letter-spacing: 0.03em;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0c10;
+  color: #e3d9c8;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 20;
+  transition: opacity 0.6s ease;
 }
