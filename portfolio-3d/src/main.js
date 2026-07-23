@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { createMaterials } from './scene/materials.js'
 import { createSky, createLights } from './scene/sky.js'
 import { createGround } from './scene/ground.js'
-import { createHouse, HOUSE_FOOTPRINT } from './scene/house.js'
+import { createHouse, isHouseBlocking } from './scene/house.js'
 import { createGate } from './scene/gate.js'
 import { createVegetation } from './scene/vegetation.js'
 import { createNameSign } from './scene/nameSign.js'
@@ -16,7 +16,7 @@ document.body.innerHTML = `
   <div id="loading">Arriving…</div>
   <div id="hero-text">
     <h1>Badmus Ayomide</h1>
-    <p>Welcome home — look around</p>
+    <p>Welcome home u can look around</p>
   </div>
   <button id="walk-btn">Walk around</button>
   <div id="walk-hint">WASD to move · mouse to look · Esc to stop</div>
@@ -46,7 +46,7 @@ const { porchLight } = createLights(scene, sunPosition)
 
 const materials = createMaterials()
 createGround(scene, materials)
-createHouse(scene, materials)
+const { door } = createHouse(scene, materials)
 createGate(scene, materials)
 createVegetation(scene, materials)
 const nameSign = createNameSign(scene)
@@ -58,7 +58,7 @@ const walk = createWalkControls({
   camera,
   renderer,
   arrivalControls,
-  houseFootprint: HOUSE_FOOTPRINT,
+  isBlocking: isHouseBlocking,
   yardBounds: { minX: -10, maxX: 10, minZ: -8.5, maxZ: 10.5 },
   ui: {
     walkBtn: document.getElementById('walk-btn'),
@@ -91,6 +91,7 @@ function animate() {
   walk.update(dt)
   fireflies.update(t)
   nameSign.update(t)
+  door.update(camera.position, dt)
 
   porchLight.intensity = 6 + Math.sin(t * 3) * 0.3
 

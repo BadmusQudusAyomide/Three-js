@@ -11,12 +11,14 @@ const WALL_T = 0.15
 // approximate footprint used for walk-mode collision
 export const HOUSE_FOOTPRINT = { minX: -4, maxX: 4, minZ: -6.3, maxZ: 0.7 }
 
-// the doorway itself is always walkable, bridging outside to the interior room
+// the doorway itself is always walkable, bridging outside to the interior room.
+// bounds intentionally reach past HOUSE_FOOTPRINT.maxZ and INTERIOR_ROOM.maxZ
+// on both ends so there's no thin blocked sliver right at the threshold.
 const DOOR_GAP = {
   minX: -DOOR_WIDTH / 2,
   maxX: DOOR_WIDTH / 2,
   minZ: -0.2,
-  maxZ: 0.6,
+  maxZ: 0.8,
 }
 
 function insideRect(x, z, rect) {
