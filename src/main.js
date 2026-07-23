@@ -450,6 +450,75 @@ for (let i = 0; i < gridSize; i++) {
   scene.add(curbX2)
 }
 
+const pedestrians = []
+
+function createPedestrian(color) {
+  const group = new THREE.Group()
+  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0.05 })
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xffd8b7, roughness: 0.9, metalness: 0.02 })
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.4, 0.12), bodyMat)
+  body.position.y = 0.22
+  group.add(body)
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), headMat)
+  head.position.y = 0.52
+  group.add(head)
+
+  const legGeometry = new THREE.BoxGeometry(0.08, 0.3, 0.08)
+  const leftLeg = new THREE.Mesh(legGeometry, bodyMat)
+  const rightLeg = new THREE.Mesh(legGeometry, bodyMat)
+  leftLeg.position.set(-0.05, 0.05, 0)
+  rightLeg.position.set(0.05, 0.05, 0)
+  group.add(leftLeg, rightLeg)
+
+  group.userData.legs = { left: leftLeg, right: rightLeg }
+  return group
+}
+
+function addPedestrianPath(path, speed) {
+  const color = new THREE.Color(`hsl(${Math.random() * 360}, 55%, 55%)`)
+  const person = createPedestrian(color)
+  person.position.copy(path[0])
+  person.userData.path = path
+  person.userData.speed = speed
+  person.userData.progress = 0
+  person.userData.direction = 1
+  pedestrians.push(person)
+  scene.add(person)
+}
+
+function createPath(start, end, height) {
+  return [new THREE.Vector3(start.x, height, start.z), new THREE.Vector3(end.x, height, end.z)]
+}
+
+const sidewalkY = 0.1
+const halfCity = citySpan / 2
+const pathOffset = roadWidth / 2 + sidewalkWidth / 2
+
+for (let i = 1; i < gridSize; i += streetEvery) {
+  const linePos = (i - gridSize / 2) * cellSize
+  const leftSide = linePos - pathOffset
+  const rightSide = linePos + pathOffset
+
+  addPedestrianPath(
+    createPath({ x: leftSide, z: -halfCity + 2 }, { x: leftSide, z: halfCity - 2 }, sidewalkY),
+    1.2 + Math.random() * 0.7
+  )
+  addPedestrianPath(
+    createPath({ x: rightSide, z: halfCity - 2 }, { x: rightSide, z: -halfCity + 2 }, sidewalkY),
+    1.1 + Math.random() * 0.6
+  )
+  addPedestrianPath(
+    createPath({ x: -halfCity + 2, z: leftSide }, { x: halfCity - 2, z: leftSide }, sidewalkY),
+    1.0 + Math.random() * 0.6
+  )
+  addPedestrianPath(
+    createPath({ x: halfCity - 2, z: rightSide }, { x: -halfCity + 2, z: rightSide }, sidewalkY),
+    1.0 + Math.random() * 0.7
+  )
+}
+
 // --- first-person controls (click canvas to lock pointer) ---
 const controls = new PointerLockControls(camera, renderer.domElement)
 
@@ -526,6 +595,29 @@ function animate() {
       tryMoveCamera(localMove.x, 0)
       tryMoveCamera(0, localMove.z)
     }
+  }
+
+  const walkCycle = Math.sin(clock.elapsedTime * 10) * 0.4
+  for (const pedestrian of pedestrians) {
+    const path = pedestrian.userData.path
+    const speedFactor = pedestrian.userData.speed
+    pedestrian.userData.progress += speedFactor * delta * 0.16 * pedestrian.userData.direction
+
+    if (pedestrian.userData.progress >= 1 || pedestrian.userData.progress <= 0) {
+      pedestrian.userData.direction *= -1
+      pedestrian.userData.progress = THREE.MathUtils.clamp(pedestrian.userData.progress, 0, 1)
+    }
+
+    const nextPos = new THREE.Vector3().lerpVectors(path[0], path[1], pedestrian.userData.progress)
+    pedestrian.position.copy(nextPos)
+
+    const forward = new THREE.Vector3().subVectors(path[1], path[0]).normalize()
+    if (pedestrian.userData.direction < 0) forward.multiplyScalar(-1)
+    pedestrian.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward)
+
+    const legs = pedestrian.userData.legs
+    legs.left.rotation.x = walkCycle
+    legs.right.rotation.x = -walkCycle
   }
 
   composer.render()
