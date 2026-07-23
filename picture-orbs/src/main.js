@@ -78,6 +78,10 @@ const palette = [
 
 const orbData = []
 
+function easeOutCubic(x) {
+  return 1 - Math.pow(1 - x, 3)
+}
+
 const SCALE = 4.4
 for (let i = 0; i < ORB_COUNT; i++) {
   const { x, y } = sampleHeartPoint()
@@ -86,20 +90,36 @@ for (let i = 0; i < ORB_COUNT; i++) {
   const baseY = y * SCALE
   const baseZ = depth
 
+  // scattered starting point on a large sphere shell, so orbs fly inward to assemble
+  const dir = new THREE.Vector3(
+    Math.random() * 2 - 1,
+    Math.random() * 2 - 1,
+    Math.random() * 2 - 1,
+  ).normalize()
+  const spread = 14 + Math.random() * 10
+  const startX = dir.x * spread
+  const startY = dir.y * spread
+  const startZ = dir.z * spread
+
   const size = 0.05 + Math.random() * 0.09
   const color = palette[Math.floor(Math.random() * palette.length)]
 
   orbData.push({
+    startX,
+    startY,
+    startZ,
     baseX,
     baseY,
     baseZ,
     size,
     phase: Math.random() * Math.PI * 2,
     speed: 0.6 + Math.random() * 0.8,
+    delay: Math.random() * 0.6,
+    duration: 1.8 + Math.random() * 1.2,
   })
 
-  dummy.position.set(baseX, baseY, baseZ)
-  dummy.scale.setScalar(size)
+  dummy.position.set(startX, startY, startZ)
+  dummy.scale.setScalar(size * 0.4)
   dummy.updateMatrix()
   orbs.setMatrixAt(i, dummy.matrix)
   orbs.setColorAt(i, color)
@@ -133,9 +153,19 @@ function animate() {
   const pulse = 1 + 0.06 * Math.sin(t * 1.6)
   for (let i = 0; i < ORB_COUNT; i++) {
     const d = orbData[i]
-    const wobble = Math.sin(t * d.speed + d.phase) * 0.05
-    dummy.position.set(d.baseX, d.baseY, d.baseZ + wobble)
-    dummy.scale.setScalar(d.size * pulse)
+
+    const rawProgress = (t - d.delay) / d.duration
+    const progress = Math.min(Math.max(rawProgress, 0), 1)
+    const eased = easeOutCubic(progress)
+
+    const wobble = progress >= 1 ? Math.sin(t * d.speed + d.phase) * 0.05 : 0
+
+    const x = d.startX + (d.baseX - d.startX) * eased
+    const y = d.startY + (d.baseY - d.startY) * eased
+    const z = d.startZ + (d.baseZ - d.startZ) * eased + wobble
+
+    dummy.position.set(x, y, z)
+    dummy.scale.setScalar(d.size * (0.4 + 0.6 * eased) * pulse)
     dummy.updateMatrix()
     orbs.setMatrixAt(i, dummy.matrix)
   }
