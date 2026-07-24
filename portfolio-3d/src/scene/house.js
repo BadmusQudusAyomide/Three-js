@@ -224,5 +224,10 @@ export function createHouse(scene, materials) {
   }
 
   scene.add(house)
-  return { house, door, interiorUpdate: interior.update }
+  return {
+    house,
+    door,
+    interiorUpdate: interior.update,
+    interactables: interior.interactables,
+  }
 }

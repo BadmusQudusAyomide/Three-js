@@ -460,5 +460,22 @@ export function createInterior(house) {
     }
   }
 
-  return { update }
+  // proof-of-concept interactables for the click-to-interact system — the
+  // real TV intro / laptop / bookshelf content lands in later phases
+  const interactables = [
+    {
+      object: consoleGroup,
+      label: 'Click to turn the TV on/off',
+      onInteract: toggleTv,
+      maxDistance: 3.5,
+    },
+    {
+      object: fireplace.group,
+      label: 'Click to light/put out the fire',
+      onInteract: fireplace.toggle,
+      maxDistance: 3,
+    },
+  ]
+
+  return { update, interactables }
 }
