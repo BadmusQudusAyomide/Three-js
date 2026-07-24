@@ -426,7 +426,10 @@ export function createInterior(house) {
 
   // === fireplace on the right wall, mirroring the bookshelf =================
 
-  const fireplace = createFireplace(house, rightWallX - 0.25, -6.0)
+  const fireplaceX = rightWallX - 0.25
+  const fireplaceZ = -6.0
+  const fireplace = createFireplace(house, fireplaceX, fireplaceZ)
+  addBlocker(fireplaceX, fireplaceZ, 0.6, 1.7)
 
   // === ceiling fan ============================================================
 
