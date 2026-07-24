@@ -100,6 +100,3 @@ function animate() {
 }
 
 animate()
-
-// TEMP DEBUG — remove before shipping
-window.__debug = { camera, arrivalControls, walk }
