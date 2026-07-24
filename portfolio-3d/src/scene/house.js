@@ -1,15 +1,16 @@
 import * as THREE from 'three'
 import { addShadowMesh } from '../utils/shadow.js'
 import { createDoor, DOOR_WIDTH, DOOR_HEIGHT } from './door.js'
-import { createInterior, INTERIOR_ROOM } from './interior.js'
-
-const WALL_W = 8
-const WALL_H = 3.6
-const WALL_D = 6
-const WALL_T = 0.15
+import { createInterior, INTERIOR_ROOM, FURNITURE_BLOCKERS } from './interior.js'
+import { WALL_W, WALL_H, WALL_D, WALL_T } from './houseDimensions.js'
 
 // approximate footprint used for walk-mode collision
-export const HOUSE_FOOTPRINT = { minX: -4, maxX: 4, minZ: -6.3, maxZ: 0.7 }
+export const HOUSE_FOOTPRINT = {
+  minX: -WALL_W / 2,
+  maxX: WALL_W / 2,
+  minZ: -(WALL_D + 0.3),
+  maxZ: 0.7,
+}
 
 // the doorway itself is always walkable, bridging outside to the interior room.
 // bounds intentionally reach past HOUSE_FOOTPRINT.maxZ and INTERIOR_ROOM.maxZ
