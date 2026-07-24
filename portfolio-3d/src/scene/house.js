@@ -2,13 +2,16 @@ import * as THREE from 'three'
 import { addShadowMesh } from '../utils/shadow.js'
 import { createDoor, DOOR_WIDTH, DOOR_HEIGHT } from './door.js'
 import { createInterior, INTERIOR_ROOM, FURNITURE_BLOCKERS } from './interior.js'
-import { WALL_W, WALL_H, WALL_D, WALL_T } from './houseDimensions.js'
+import { WALL_W, WALL_H, WALL_D, WALL_T, WALL_CLEARANCE } from './houseDimensions.js'
 
-// approximate footprint used for walk-mode collision
+// approximate footprint used for walk-mode collision. The side/back edges
+// get extra WALL_CLEARANCE so the camera can't walk up to touching distance
+// of the exterior wall (near-clip plane would poke through it) — maxZ is
+// the porch/steps side, not a wall, so it's left at the true edge
 export const HOUSE_FOOTPRINT = {
-  minX: -WALL_W / 2,
-  maxX: WALL_W / 2,
-  minZ: -(WALL_D + 0.3),
+  minX: -WALL_W / 2 - WALL_CLEARANCE,
+  maxX: WALL_W / 2 + WALL_CLEARANCE,
+  minZ: -(WALL_D + 0.3) - WALL_CLEARANCE,
   maxZ: 0.7,
 }
 

@@ -1,16 +1,25 @@
 import * as THREE from 'three'
 import { addShadowMesh } from '../utils/shadow.js'
-import { WALL_W as INTERIOR_W, WALL_H as INTERIOR_H, WALL_D as INTERIOR_D, WALL_T } from './houseDimensions.js'
+import {
+  WALL_W as INTERIOR_W,
+  WALL_H as INTERIOR_H,
+  WALL_D as INTERIOR_D,
+  WALL_T,
+  WALL_CLEARANCE,
+} from './houseDimensions.js'
 import { createFireplace } from './fireplace.js'
 import { createCeilingFan } from './ceilingFan.js'
 import { createWallClock } from './wallClock.js'
 import { createRugTexture } from '../utils/canvasTexture.js'
 
-// walkable interior floor area, inset from the wall shell
+// walkable interior floor area, inset from the wall shell. minZ/minX/maxX
+// get an extra WALL_CLEARANCE so the camera can't walk right up to touching
+// a solid wall; maxZ doesn't need it — that edge is the open doorway, not
+// a wall
 export const INTERIOR_ROOM = {
-  minX: -INTERIOR_W / 2 + WALL_T,
-  maxX: INTERIOR_W / 2 - WALL_T,
-  minZ: -INTERIOR_D + WALL_T,
+  minX: -INTERIOR_W / 2 + WALL_T + WALL_CLEARANCE,
+  maxX: INTERIOR_W / 2 - WALL_T - WALL_CLEARANCE,
+  minZ: -INTERIOR_D + WALL_T + WALL_CLEARANCE,
   maxZ: -0.15,
 }
 
@@ -380,6 +389,9 @@ export function createInterior(house) {
   )
   artCanvas.position.x = 0.02
   artGroup.add(artCanvas)
+  // the canvas is offset toward local +x (in front of the frame backing);
+  // rotate 180° so that faces -x, into the room, instead of into the wall
+  artGroup.rotation.y = Math.PI
   artGroup.position.set(rightWallX - 0.11, 2.0, -2.2)
   house.add(artGroup)
 
@@ -422,7 +434,7 @@ export function createInterior(house) {
 
   // === wall clock, real local time ===========================================
 
-  const clock = createWallClock(house, rightWallX - 0.11, 2.0, -1.2, -Math.PI / 2)
+  const clock = createWallClock(house, rightWallX - 0.11, 2.0, -1.2, Math.PI)
 
   function update(t, dt) {
     fireplace.update(t)
