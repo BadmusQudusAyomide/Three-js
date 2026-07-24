@@ -19,13 +19,13 @@ async function main() {
     window.__debug.arrivalControls.update = () => {}
   })
 
-  async function shoot(name, x, y, z, yaw) {
+  async function shoot(name, x, y, z, yaw, pitch = 0) {
     await page.evaluate(
-      ({ x, y, z, yaw }) => {
+      ({ x, y, z, yaw, pitch }) => {
         window.__debug.camera.position.set(x, y, z)
-        window.__debug.camera.rotation.set(0, yaw, 0)
+        window.__debug.camera.rotation.set(pitch, yaw, 0)
       },
-      { x, y, z, yaw },
+      { x, y, z, yaw, pitch },
     )
     await page.waitForTimeout(900)
     await page.screenshot({ path: `${OUT}/atmo-${name}.png` })
@@ -33,16 +33,16 @@ async function main() {
 
   // wide view of the room from near the door
   await shoot('overview', 0, 1.75, -1.5, 0)
-  // toward the fireplace on the right wall
-  await shoot('fireplace', 1.5, 1.6, -4.5, Math.PI * 1.15)
-  // toward the bookshelf / plant on the left wall
-  await shoot('bookshelf-plant', -1.5, 1.6, -5.5, -Math.PI / 2)
+  // toward the fireplace on the right wall (facing +x)
+  await shoot('fireplace', 0, 1.4, -6.0, Math.PI / 2)
+  // toward the bookshelf / plant on the left wall (facing -x)
+  await shoot('bookshelf-plant', 0, 1.4, -6.0, -Math.PI / 2)
   // looking up at the ceiling fan
-  await shoot('ceiling-fan', 0, 1.75, -1.5, 0.001)
-  // close on the wall clock
-  await shoot('clock', 0, 1.9, -1.4, Math.PI)
-  // rug close-up
-  await shoot('rug', 0, 2.5, -3.6, -Math.PI / 2 - 0.001)
+  await shoot('ceiling-fan', 0, 1.75, -2.0, 0.001, -0.9)
+  // wall clock, standing near it facing +x
+  await shoot('clock', 0, 1.75, -1.2, Math.PI / 2)
+  // rug pattern, standing over it looking down-ish via position only
+  await shoot('rug', 0, 1.75, -4.0, 0)
 
   await browser.close()
 }
