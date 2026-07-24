@@ -72,10 +72,19 @@ export function createInterior(house) {
     house.add(sideWall)
   }
 
-  const pendantLight = new THREE.PointLight(0xffcf9e, 5, 9, 2)
+  // no shadow casting here: this light sits close to the ceiling in a tight
+  // room and shadow-mapping it produces acne that reads as the whole
+  // interior being unlit, which defeats the point of a room light
+  const pendantLight = new THREE.PointLight(0xffcf9e, 9, 14, 1.6)
   pendantLight.position.set(0, INTERIOR_H - 0.5, -3)
-  pendantLight.castShadow = true
   house.add(pendantLight)
+
+  // fill light near the entry so the room is clearly visible from outside
+  // the moment the door swings open, instead of fading to black at the
+  // threshold
+  const entryLight = new THREE.PointLight(0xffcf9e, 4, 6, 1.6)
+  entryLight.position.set(0, 2.0, -1.2)
+  house.add(entryLight)
 
   const fixtureMaterial = new THREE.MeshStandardMaterial({
     color: 0x2b2418,

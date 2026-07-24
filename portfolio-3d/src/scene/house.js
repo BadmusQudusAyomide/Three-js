@@ -93,11 +93,33 @@ export function createHouse(scene, materials) {
   chimney.position.set(2.4, WALL_H + 1.3, -4.2)
   house.add(chimney)
 
-  const doorFrame = addShadowMesh(
-    new THREE.Mesh(new THREE.BoxGeometry(1.34, 2.44, 0.08), materials.trim),
+  // door casing: jambs + lintel around the opening, NOT a solid slab over
+  // it — a solid box here would cover the doorway and block the view
+  // through it no matter what the door itself is doing
+  const JAMB_T = 0.12
+  const FRAME_D = 0.08
+  for (const side of [-1, 1]) {
+    const jamb = addShadowMesh(
+      new THREE.Mesh(
+        new THREE.BoxGeometry(JAMB_T, DOOR_HEIGHT + JAMB_T, FRAME_D),
+        materials.trim,
+      ),
+    )
+    jamb.position.set(
+      side * (DOOR_WIDTH / 2 + JAMB_T / 2),
+      (DOOR_HEIGHT + JAMB_T) / 2,
+      0,
+    )
+    house.add(jamb)
+  }
+  const lintel = addShadowMesh(
+    new THREE.Mesh(
+      new THREE.BoxGeometry(DOOR_WIDTH + JAMB_T * 2, JAMB_T, FRAME_D),
+      materials.trim,
+    ),
   )
-  doorFrame.position.set(0, 1.22, 0.0)
-  house.add(doorFrame)
+  lintel.position.set(0, DOOR_HEIGHT + JAMB_T / 2, 0)
+  house.add(lintel)
 
   const door = createDoor(materials)
   house.add(door.group)
