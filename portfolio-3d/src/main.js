@@ -11,6 +11,7 @@ import { createNameSign } from './scene/nameSign.js'
 import { createFireflies } from './scene/fireflies.js'
 import { createArrivalControls } from './controls/arrivalView.js'
 import { createWalkControls } from './controls/walk.js'
+import { createInteractionSystem } from './controls/interact.js'
 
 document.body.innerHTML = `
   <div id="loading">Arriving…</div>
@@ -20,6 +21,8 @@ document.body.innerHTML = `
   </div>
   <button id="walk-btn">Walk around</button>
   <div id="walk-hint">WASD to move · mouse to look · Esc to stop</div>
+  <div id="crosshair"></div>
+  <div id="interact-prompt"></div>
 `
 
 const scene = new THREE.Scene()
@@ -46,7 +49,7 @@ const { porchLight } = createLights(scene, sunPosition)
 
 const materials = createMaterials()
 createGround(scene, materials)
-const { door, interiorUpdate } = createHouse(scene, materials)
+const { door, interiorUpdate, interactables } = createHouse(scene, materials)
 createGate(scene, materials)
 createVegetation(scene, materials)
 const nameSign = createNameSign(scene)
