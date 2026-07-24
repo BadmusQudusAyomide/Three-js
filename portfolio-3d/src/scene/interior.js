@@ -380,7 +380,7 @@ export function createInterior(house) {
   )
   artCanvas.position.x = 0.02
   artGroup.add(artCanvas)
-  artGroup.position.set(rightWallX - 0.03, 2.0, -2.2)
+  artGroup.position.set(rightWallX - 0.11, 2.0, -2.2)
   house.add(artGroup)
 
   // === potted plant in the back-left corner ==================================
@@ -422,7 +422,7 @@ export function createInterior(house) {
 
   // === wall clock, real local time ===========================================
 
-  const clock = createWallClock(house, rightWallX - 0.03, 2.0, -1.2, -Math.PI / 2)
+  const clock = createWallClock(house, rightWallX - 0.11, 2.0, -1.2, -Math.PI / 2)
 
   function update(t, dt) {
     fireplace.update(t)
