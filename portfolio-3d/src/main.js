@@ -70,6 +70,17 @@ const walk = createWalkControls({
   },
 })
 
+const interact = createInteractionSystem({
+  camera,
+  domElement: renderer.domElement,
+  walk,
+  ui: {
+    crosshair: document.getElementById('crosshair'),
+    prompt: document.getElementById('interact-prompt'),
+  },
+})
+for (const entry of interactables) interact.register(entry.object, entry)
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
@@ -96,6 +107,7 @@ function animate() {
   nameSign.update(t)
   door.update(camera.position, dt)
   interiorUpdate(t, dt)
+  interact.update(dt)
 
   porchLight.intensity = 6 + Math.sin(t * 3) * 0.3
 

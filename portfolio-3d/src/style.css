@@ -78,6 +78,42 @@ canvas {
   z-index: 10;
 }
 
+#crosshair {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: rgba(255, 245, 232, 0.75);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 10;
+}
+
+#interact-prompt {
+  position: fixed;
+  top: calc(50% + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  background: rgba(20, 16, 12, 0.6);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 214, 168, 0.35);
+  border-radius: 999px;
+  color: #fff5e8;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
 #loading {
   position: fixed;
   inset: 0;
