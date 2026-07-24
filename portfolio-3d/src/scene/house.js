@@ -140,8 +140,8 @@ export function createHouse(scene, materials) {
     glass.position.set(x, 1.9, 0.06)
     house.add(glass)
   }
-  makeWindow(-2.6)
-  makeWindow(2.6)
+  makeWindow(-3.3)
+  makeWindow(3.3)
 
   // upper (balcony) window
   const upperFrame = addShadowMesh(
