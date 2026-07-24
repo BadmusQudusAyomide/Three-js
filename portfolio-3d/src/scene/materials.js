@@ -9,11 +9,16 @@ export function createMaterials() {
     roof: new THREE.MeshStandardMaterial({ color: 0x8a3a2b, roughness: 0.7 }),
     wood: new THREE.MeshStandardMaterial({ color: 0x4a2e1f, roughness: 0.6 }),
     door: new THREE.MeshStandardMaterial({ color: 0x5c3320, roughness: 0.5 }),
+    // semi-transparent so the yard is visible through it from inside —
+    // the room shouldn't feel boxed in — while still reading as a warm,
+    // lit window from outside
     glassLit: new THREE.MeshStandardMaterial({
       color: 0x2c2a1c,
       emissive: 0xffb35c,
       emissiveIntensity: 1.1,
       roughness: 0.3,
+      transparent: true,
+      opacity: 0.55,
     }),
     stone: new THREE.MeshStandardMaterial({ color: 0x8d867a, roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({

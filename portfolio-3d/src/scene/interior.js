@@ -1,6 +1,10 @@
 import * as THREE from 'three'
 import { addShadowMesh } from '../utils/shadow.js'
 import { WALL_W as INTERIOR_W, WALL_H as INTERIOR_H, WALL_D as INTERIOR_D, WALL_T } from './houseDimensions.js'
+import { createFireplace } from './fireplace.js'
+import { createCeilingFan } from './ceilingFan.js'
+import { createWallClock } from './wallClock.js'
+import { createRugTexture } from '../utils/canvasTexture.js'
 
 // walkable interior floor area, inset from the wall shell
 export const INTERIOR_ROOM = {
@@ -131,7 +135,7 @@ export function createInterior(house) {
     roughness: 0.55,
   })
   const rugMaterial = new THREE.MeshStandardMaterial({
-    color: 0x8a3b34,
+    map: createRugTexture(),
     roughness: 1,
   })
   const metalMaterial = new THREE.MeshStandardMaterial({
@@ -261,6 +265,24 @@ export function createInterior(house) {
   tvStandNeck.position.set(0, 0.8, -0.15)
   consoleGroup.add(tvStandNeck)
 
+  // subtle purple accent strip under the console — a small cool contrast to
+  // the warm firelight/pendant, not a neon wash of the whole room
+  const ledMaterial = new THREE.MeshStandardMaterial({
+    color: 0x120a1c,
+    emissive: 0x8a4fe0,
+    emissiveIntensity: 1.4,
+    roughness: 0.5,
+  })
+  const ledStrip = addShadowMesh(
+    new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.03, 0.06), ledMaterial),
+    { cast: false },
+  )
+  ledStrip.position.set(0, 0.03, 0.2)
+  consoleGroup.add(ledStrip)
+  const ledLight = new THREE.PointLight(0x8a4fe0, 1.4, 2.2, 2)
+  ledLight.position.set(0, 0.05, 0.3)
+  consoleGroup.add(ledLight)
+
   consoleGroup.position.set(0, 0, consoleZ)
   house.add(consoleGroup)
   addBlocker(0, consoleZ, 2.5, 0.6)
@@ -361,9 +383,9 @@ export function createInterior(house) {
   artGroup.position.set(rightWallX - 0.03, 2.0, -2.2)
   house.add(artGroup)
 
-  // === potted plant in the back corner =======================================
+  // === potted plant in the back-left corner ==================================
 
-  const plantX = rightWallX - 0.55
+  const plantX = leftWallX + 0.55
   const plantZ = backWallZ + 0.55
   const plantGroup = new THREE.Group()
   const pot = addShadowMesh(
@@ -371,6 +393,7 @@ export function createInterior(house) {
   )
   pot.position.set(0, 0.16, 0)
   plantGroup.add(pot)
+  const fronds = []
   for (let i = 0; i < 5; i++) {
     const frond = addShadowMesh(
       new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.6, 6), foliageMaterial),
@@ -378,11 +401,40 @@ export function createInterior(house) {
     )
     const angle = (i / 5) * Math.PI * 2
     frond.position.set(Math.cos(angle) * 0.08, 0.6, Math.sin(angle) * 0.08)
-    frond.rotation.z = Math.cos(angle) * 0.25
-    frond.rotation.x = Math.sin(angle) * 0.25
+    const baseZ = Math.cos(angle) * 0.25
+    const baseX = Math.sin(angle) * 0.25
+    frond.rotation.z = baseZ
+    frond.rotation.x = baseX
     plantGroup.add(frond)
+    fronds.push({ mesh: frond, baseX, baseZ, phase: i * 1.3 })
   }
   plantGroup.position.set(plantX, 0, plantZ)
   house.add(plantGroup)
   addBlocker(plantX, plantZ, 0.5, 0.5)
+
+  // === fireplace on the right wall, mirroring the bookshelf =================
+
+  const fireplace = createFireplace(house, rightWallX - 0.25, -6.0)
+
+  // === ceiling fan ============================================================
+
+  const fan = createCeilingFan(house, 0, INTERIOR_H - 0.15, -2.0)
+
+  // === wall clock, real local time ===========================================
+
+  const clock = createWallClock(house, rightWallX - 0.03, 2.0, -1.2, -Math.PI / 2)
+
+  function update(t, dt) {
+    fireplace.update(t)
+    fan.update(dt)
+    clock.update()
+
+    for (const f of fronds) {
+      const sway = Math.sin(t * 0.8 + f.phase) * 0.08
+      f.mesh.rotation.z = f.baseZ + sway
+      f.mesh.rotation.x = f.baseX + Math.cos(t * 0.7 + f.phase) * 0.06
+    }
+  }
+
+  return { update }
 }

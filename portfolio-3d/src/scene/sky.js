@@ -14,9 +14,9 @@ export function createSky(scene) {
   sunPosition.setFromSphericalCoords(1, phi, theta)
 
   const skyUniforms = sky.material.uniforms
-  skyUniforms.turbidity.value = 6
-  skyUniforms.rayleigh.value = 2.2
-  skyUniforms.mieCoefficient.value = 0.012
+  skyUniforms.turbidity.value = 7
+  skyUniforms.rayleigh.value = 2.4
+  skyUniforms.mieCoefficient.value = 0.018
   skyUniforms.mieDirectionalG.value = 0.9
   skyUniforms.sunPosition.value.copy(sunPosition)
 
@@ -26,7 +26,7 @@ export function createSky(scene) {
 }
 
 export function createLights(scene, sunPosition) {
-  const hemiLight = new THREE.HemisphereLight(0x9fb4d8, 0x3a2f28, 0.55)
+  const hemiLight = new THREE.HemisphereLight(0xb9a4d8, 0x3a2f28, 0.55)
   scene.add(hemiLight)
 
   const sunLight = new THREE.DirectionalLight(0xffcf9e, 2.4)

@@ -38,7 +38,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 0.95
+renderer.toneMappingExposure = 1.05
 document.body.appendChild(renderer.domElement)
 
 const { sunPosition } = createSky(scene)
@@ -46,7 +46,7 @@ const { porchLight } = createLights(scene, sunPosition)
 
 const materials = createMaterials()
 createGround(scene, materials)
-const { door } = createHouse(scene, materials)
+const { door, interiorUpdate } = createHouse(scene, materials)
 createGate(scene, materials)
 createVegetation(scene, materials)
 const nameSign = createNameSign(scene)
@@ -92,6 +92,7 @@ function animate() {
   fireflies.update(t)
   nameSign.update(t)
   door.update(camera.position, dt)
+  interiorUpdate(t, dt)
 
   porchLight.intensity = 6 + Math.sin(t * 3) * 0.3
 

@@ -64,7 +64,7 @@ export function createHouse(scene, materials) {
   header.position.set(0, DOOR_HEIGHT + headerHeight / 2, -WALL_T / 2)
   house.add(header)
 
-  createInterior(house)
+  const interior = createInterior(house)
 
   // gable roof via extruded triangular profile
   const roofOverhangX = 0.5
@@ -221,5 +221,5 @@ export function createHouse(scene, materials) {
   }
 
   scene.add(house)
-  return { house, door }
+  return { house, door, interiorUpdate: interior.update }
 }
