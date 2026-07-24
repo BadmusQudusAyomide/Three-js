@@ -59,7 +59,7 @@ const walk = createWalkControls({
   renderer,
   arrivalControls,
   isBlocking: isHouseBlocking,
-  yardBounds: { minX: -10, maxX: 10, minZ: -8.5, maxZ: 10.5 },
+  yardBounds: { minX: -10, maxX: 10, minZ: -9.5, maxZ: 10.5 },
   ui: {
     walkBtn: document.getElementById('walk-btn'),
     walkHint: document.getElementById('walk-hint'),
