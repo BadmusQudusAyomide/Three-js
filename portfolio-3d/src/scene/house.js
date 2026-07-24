@@ -27,10 +27,10 @@ function insideRect(x, z, rect) {
 }
 
 export function isHouseBlocking(x, z) {
-  if (!insideRect(x, z, HOUSE_FOOTPRINT)) return false
-  if (insideRect(x, z, DOOR_GAP)) return false
-  if (insideRect(x, z, INTERIOR_ROOM)) return false
-  return true
+  if (insideRect(x, z, HOUSE_FOOTPRINT)) {
+    if (!insideRect(x, z, DOOR_GAP) && !insideRect(x, z, INTERIOR_ROOM)) return true
+  }
+  return FURNITURE_BLOCKERS.some((rect) => insideRect(x, z, rect))
 }
 
 export function createHouse(scene, materials) {
@@ -69,7 +69,7 @@ export function createHouse(scene, materials) {
   // gable roof via extruded triangular profile
   const roofOverhangX = 0.5
   const roofOverhangZ = 0.5
-  const roofPeak = 2.3
+  const roofPeak = 2.5
   const roofShape = new THREE.Shape()
   roofShape.moveTo(-WALL_W / 2 - roofOverhangX, 0)
   roofShape.lineTo(0, roofPeak)
@@ -91,7 +91,7 @@ export function createHouse(scene, materials) {
   const chimney = addShadowMesh(
     new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.6, 0.5), materials.chimney),
   )
-  chimney.position.set(2.4, WALL_H + 1.3, -4.2)
+  chimney.position.set(3.0, WALL_H + 1.3, -5.6)
   house.add(chimney)
 
   // door casing: jambs + lintel around the opening, NOT a solid slab over
