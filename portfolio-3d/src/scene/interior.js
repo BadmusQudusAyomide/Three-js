@@ -296,6 +296,15 @@ export function createInterior(house) {
   house.add(consoleGroup)
   addBlocker(0, consoleZ, 2.5, 0.6)
 
+  // placeholder power toggle — the real intro content lands in a later
+  // phase, this just proves the interaction system end to end
+  let tvOn = true
+  function toggleTv() {
+    tvOn = !tvOn
+    screenMaterial.emissiveIntensity = tvOn ? 0.9 : 0
+    screenMaterial.color.set(tvOn ? 0x0a0f16 : 0x030303)
+  }
+
   // === bookshelf against the left wall =======================================
 
   const shelfX = leftWallX + 0.3

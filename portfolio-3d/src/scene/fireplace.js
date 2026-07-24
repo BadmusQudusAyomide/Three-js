@@ -86,7 +86,14 @@ export function createFireplace(house, x, z) {
   group.rotation.y = Math.PI / 2
   house.add(group)
 
+  let lit = true
+
   function update(t) {
+    if (!lit) {
+      fireLight.intensity = 0
+      return
+    }
+
     const flicker = Math.sin(t * FLICKER_SPEED) * 0.5 + Math.sin(t * FLICKER_SPEED * 2.3) * 0.5
     fireLight.intensity = 5 + flicker * FLICKER_AMOUNT * 5
 
@@ -97,5 +104,12 @@ export function createFireplace(house, x, z) {
     }
   }
 
-  return { group, update }
+  function toggle() {
+    lit = !lit
+    for (const f of flames) f.mesh.visible = lit
+    emberMaterial.emissiveIntensity = lit ? 0.6 : 0.1
+    if (!lit) fireLight.intensity = 0
+  }
+
+  return { group, update, toggle }
 }
